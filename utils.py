@@ -16,6 +16,7 @@ async def generate_text(prompt) -> dict:
     except Exception as e:
         logging.error(e)
    
+"""
 async def generate_image(prompt, n=1, size="1024x1024") -> list[str]:
     try:
         response = await openai.Image.acreate(
@@ -31,3 +32,4 @@ async def generate_image(prompt, n=1, size="1024x1024") -> list[str]:
         return []
     else:
         return urls
+"""

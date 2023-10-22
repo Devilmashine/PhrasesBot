@@ -38,7 +38,7 @@ async def generate_text(msg: Message, state: FSMContext):
     if not res:
         return await mesg.edit_text(text.gen_error, reply_markup=kb.iexit_kb)
     await mesg.edit_text(res[0] + text.text_watermark, disable_web_page_preview=True)
-
+"""
 @router.callback_query(F.data == "generate_image")
 async def input_image_prompt(clbck: CallbackQuery, state: FSMContext):
     await state.set_state(Gen.img_prompt)
@@ -55,3 +55,4 @@ async def generate_image(msg: Message, state: FSMContext):
         return await mesg.edit_text(text.gen_error, reply_markup=kb.iexit_kb)
     await mesg.delete()
     await mesg.answer_photo(photo=img_res[0], caption=text.img_watermark)
+"""
