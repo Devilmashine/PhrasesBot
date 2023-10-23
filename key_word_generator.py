@@ -1,6 +1,6 @@
 import asyncio
 import openai
-import time
+import logging
 import json
 import config
 
@@ -83,5 +83,5 @@ async def main(topic, keywords, phrases_num):
 
 # Run the main function
 if __name__ == "__main__":
-    generated_phrases_file = asyncio.run(main("clothes", "male, female, children's, washing, cleaning, top, shows, fashion, jewelry, real estate, lawyers, medicine, health, travel, hotel", 300))
+    generated_phrases_file = asyncio.run(main())
     print(f"Generated phrases saved in {generated_phrases_file}")
