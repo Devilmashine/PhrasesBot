@@ -6,8 +6,6 @@ import json
 api_key = "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" 
 openai.api_key = api_key 
 
-import json
-
 async def chat_chatgpt_stream(prompt) -> list[str]:
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-16k",
@@ -29,9 +27,11 @@ async def chat_chatgpt_stream(prompt) -> list[str]:
 
 def parse_final_response(final_response: str) -> list[str]:
     if not final_response.startswith("["):
-        return final_response[1:-1].split(", ")
+        return final_response.split(", ")
+    
     try:
-        return json.loads(final_response)
+        parsed_response = json.loads(final_response)
+        return parsed_response
     except (json.JSONDecodeError, AttributeError) as e:
         print(f"Error occurred: {e}")
         return [final_response]
@@ -83,5 +83,5 @@ async def main(topic, keywords, phrases_num):
 
 # Run the main function
 if __name__ == "__main__":
-    generated_phrases_file = asyncio.run(main("clothes", "male, female, children's, washing, cleaning, top, shows, fashion, jewelry, real estate, lawyers, medicine, health, travel, hotel", 100))
+    generated_phrases_file = asyncio.run(main("clothes", "male, female, children's, washing, cleaning, top, shows, fashion, jewelry, real estate, lawyers, medicine, health, travel, hotel", 200))
     print(f"Generated phrases saved in {generated_phrases_file}")
