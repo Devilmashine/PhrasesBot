@@ -1,58 +1,66 @@
-from aiogram import F, Router, types
+import os
+from aiogram import Bot, Router, types
 from aiogram.filters import Command
 from aiogram.types import Message
-from aiogram import flags
 from aiogram.fsm.context import FSMContext
-from aiogram.types.callback_query import CallbackQuery 
-
-import utils
+from aiogram.types.callback_query import CallbackQuery
+import key_word_generator
 from states import Gen
-
 import kb
 import text
+import config
 
 router = Router()
+bot = Bot(token=config.BOT_TOKEN)
 
 @router.message(Command("start"))
 async def start_handler(msg: Message):
     await msg.answer(text.greet.format(name=msg.from_user.full_name), reply_markup=kb.menu)
 
-@router.message(F.text == "Меню")
-@router.message(F.text == "Выйти в меню")
-@router.message(F.text == "◀️ Выйти в меню")
+@router.message(types.ContentType.TEXT(equals=["Меню", "Выйти в меню", "◀️ Выйти в меню"]))
 async def menu(msg: Message):
     await msg.answer(text.menu, reply_markup=kb.menu)
 
-@router.callback_query(F.data == "generate_text")
+@router.callback_query(types.ContentType.TEXT(data="generate_text"))
 async def input_text_prompt(clbck: CallbackQuery, state: FSMContext):
     await state.set_state(Gen.text_prompt)
     await clbck.message.edit_text(text.gen_text)
     await clbck.message.answer(text.gen_exit, reply_markup=kb.exit_kb)
 
-@router.message(Gen.text_prompt)
-@flags.chat_action("typing")
 async def generate_text(msg: Message, state: FSMContext):
     prompt = msg.text
-    mesg = await msg.answer(text.gen_wait)
-    res = await utils.generate_text(prompt)
-    if not res:
-        return await mesg.edit_text(text.gen_error, reply_markup=kb.iexit_kb)
-    await mesg.edit_text(res[0] + text.text_watermark, disable_web_page_preview=True)
-"""
-@router.callback_query(F.data == "generate_image")
-async def input_image_prompt(clbck: CallbackQuery, state: FSMContext):
-    await state.set_state(Gen.img_prompt)
-    await clbck.message.edit_text(text.gen_image)
-    await clbck.message.answer(text.gen_exit, reply_markup=kb.exit_kb)
+    await msg.answer(text.gen_wait)
+    await Gen.topic.set()
+    await state.set_state(Gen.topic)
+    await msg.answer("Введите тему:")
 
-@router.message(Gen.img_prompt)
-@flags.chat_action("upload_photo")
-async def generate_image(msg: Message, state: FSMContext):
-    prompt = msg.text
-    mesg = await msg.answer(text.gen_wait)
-    img_res = await utils.generate_image(prompt)
-    if len(img_res) == 0:
-        return await mesg.edit_text(text.gen_error, reply_markup=kb.iexit_kb)
-    await mesg.delete()
-    await mesg.answer_photo(photo=img_res[0], caption=text.img_watermark)
-"""
+@router.message(state=Gen.topic)
+async def process_topic(message: types.Message, state: FSMContext):
+    topic = message.text
+    await state.update_data(topic=topic)
+    await Gen.keywords.set()
+    await message.reply("Введите ключевые слова:")
+
+@router.message(state=Gen.keywords)
+async def process_keywords(message: types.Message, state: FSMContext):
+    keywords = message.text
+    await state.update_data(keywords=keywords)
+    await Gen.phrases_num.set()
+    await message.reply("Введите количество фраз:")
+
+@router.message(state=Gen.phrases_num)
+async def process_phrases_num(message: types.Message, state: FSMContext):
+    phrases_num = int(message.text)
+    data = await state.get_data()
+    topic = data.get("topic")
+    keywords = data.get("keywords")
+    try:
+        phrases_file = key_word_generator.main(topic, keywords, phrases_num) 
+        with open(phrases_file, 'rb') as file:
+            await bot.send_document(message.chat.id, file)
+        os.unlink(phrases_file)
+        await state.finish()
+        await message.reply("Готово!")
+    except Exception as e:
+        await message.reply('Ошибка генерации фраз')
+        return
