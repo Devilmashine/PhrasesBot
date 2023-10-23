@@ -2,9 +2,9 @@ import asyncio
 import openai
 import time
 import json
+import config
 
-api_key = "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" 
-openai.api_key = api_key 
+openai.api_key = config.OPENAI_TOKEN
 
 async def chat_chatgpt_stream(prompt) -> list[str]:
     response = openai.ChatCompletion.create(
@@ -15,7 +15,8 @@ async def chat_chatgpt_stream(prompt) -> list[str]:
         stop=None,
         temperature=1,
         frequency_penalty=0.1,
-        presence_penalty=0.1
+        presence_penalty=0.1,
+        timeout=120
     )
     final_response = response.choices[0].message["content"]  # type: ignore
 
@@ -36,9 +37,8 @@ def parse_final_response(final_response: str) -> list[str]:
         print(f"Error occurred: {e}")
         return [final_response]
 
-
-def remove_duplicates(response_list: list[str]) -> list[str]:
-    return list(set(response_list))
+def remove_duplicates(response_list):
+    return set(response_list)
 
 async def main(topic, keywords, phrases_num):
     conversation_history = []
@@ -75,7 +75,7 @@ async def main(topic, keywords, phrases_num):
                 
         num_requests += 1
         if num_requests >= 3:
-            time.sleep(60)  # Пауза 60 секунд
+            await asyncio.sleep(60)  # Пауза 60 секунд
             num_requests = 0
     
     output_file.close()
@@ -83,5 +83,5 @@ async def main(topic, keywords, phrases_num):
 
 # Run the main function
 if __name__ == "__main__":
-    generated_phrases_file = asyncio.run(main("clothes", "male, female, children's, washing, cleaning, top, shows, fashion, jewelry, real estate, lawyers, medicine, health, travel, hotel", 200))
+    generated_phrases_file = asyncio.run(main("clothes", "male, female, children's, washing, cleaning, top, shows, fashion, jewelry, real estate, lawyers, medicine, health, travel, hotel", 300))
     print(f"Generated phrases saved in {generated_phrases_file}")
