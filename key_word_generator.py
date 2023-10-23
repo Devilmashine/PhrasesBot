@@ -1,3 +1,4 @@
+import asyncio
 import openai
 import time
 import json
@@ -5,10 +6,11 @@ import json
 api_key = "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" 
 openai.api_key = api_key 
 
-def chat_chatgpt_stream(prompt):
-    # Отправка запроса к ChatGPT API
+import json
+
+async def chat_chatgpt_stream(prompt) -> list[str]:
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-16k",  
+        model="gpt-3.5-turbo-16k",
         messages=prompt,
         max_tokens=10000,
         top_p=1,
@@ -18,13 +20,27 @@ def chat_chatgpt_stream(prompt):
         presence_penalty=0.1
     )
     final_response = response.choices[0].message["content"]  # type: ignore
-    try:
-        response_list = json.loads(final_response)
-        return response_list
-    except json.JSONDecodeError:
-        return ["Error"]
 
-def main(topic, keywords, phrases_num):
+    response_list = parse_final_response(final_response)
+
+    response_list = remove_duplicates(response_list)
+
+    return response_list
+
+def parse_final_response(final_response: str) -> list[str]:
+    if not final_response.startswith("["):
+        return final_response[1:-1].split(", ")
+    try:
+        return json.loads(final_response)
+    except (json.JSONDecodeError, AttributeError) as e:
+        print(f"Error occurred: {e}")
+        return [final_response]
+
+
+def remove_duplicates(response_list: list[str]) -> list[str]:
+    return list(set(response_list))
+
+async def main(topic, keywords, phrases_num):
     conversation_history = []
     output_file = open("generated_phrases.txt", "w")  # Создаем файл с фразами
     output_summary = []
@@ -40,18 +56,18 @@ def main(topic, keywords, phrases_num):
         
     while len(output_summary) < phrases_num:
         if first_request:
-            response = chat_chatgpt_stream(prompt)
+            response = await chat_chatgpt_stream(prompt)
             first_request = False
         else:
             conversation_history.append({"role": "user", "content": "please continue!"})
             prompt = conversation_history
-            response = chat_chatgpt_stream(prompt)
+            response = await chat_chatgpt_stream(prompt)
             
         if response:
             conversation_history.append({"role": "assistant", "content": str(response)})
             output_summary.extend(response)
             for item in response:
-                output_file.write(json.dumps(item) + "\n")
+                output_file.write(item.replace("'", "").replace('"', '') + "\n")
                 
             prompt = [message["content"] for message in conversation_history]
                 
@@ -67,5 +83,5 @@ def main(topic, keywords, phrases_num):
 
 # Run the main function
 if __name__ == "__main__":
-    generated_phrases_file = main()
+    generated_phrases_file = asyncio.run(main("clothes", "male, female, children's, washing, cleaning, top, shows, fashion, jewelry, real estate, lawyers, medicine, health, travel, hotel", 100))
     print(f"Generated phrases saved in {generated_phrases_file}")
