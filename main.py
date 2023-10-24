@@ -9,9 +9,12 @@ from aiogram.utils.chat_action import ChatActionMiddleware
 
 import config
 from handlers import router
+from db import async_main
 
 
 async def main():
+    await async_main()
+    
     bot = Bot(token=config.BOT_TOKEN, parse_mode=ParseMode.HTML)
     dp = Dispatcher(storage=MemoryStorage())
     dp.message.middleware(ChatActionMiddleware())

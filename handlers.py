@@ -16,7 +16,13 @@ bot = Bot(token=config.BOT_TOKEN)
 @router.message(Command("start"))
 async def start_handler(msg: Message):
     await msg.answer(text.greet.format(name=msg.from_user.full_name), reply_markup=kb.menu)
+    
 
+
+
+
+
+"""
 @router.message(types.ContentType.TEXT(equals=["Меню", "Выйти в меню", "◀️ Выйти в меню"]))
 async def menu(msg: Message):
     await msg.answer(text.menu, reply_markup=kb.menu)
@@ -64,3 +70,5 @@ async def process_phrases_num(message: types.Message, state: FSMContext):
     except Exception as e:
         await message.reply('Ошибка генерации фраз')
         return
+    
+"""
