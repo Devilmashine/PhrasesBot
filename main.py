@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.utils.chat_action import ChatActionMiddleware
@@ -15,7 +16,8 @@ from db.db import async_main
 async def main():
     await async_main()
     
-    bot = Bot(token=config.BOT_TOKEN, parse_mode=ParseMode.HTML)
+    session = AiohttpSession(proxy="http://proxy.server:3128")
+    bot = Bot(token=config.BOT_TOKEN, parse_mode=ParseMode.HTML, session=session)
     dp = Dispatcher(storage=MemoryStorage())
     dp.message.middleware(ChatActionMiddleware())
     dp.include_router(router)
