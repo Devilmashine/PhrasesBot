@@ -16,8 +16,8 @@ from db.db import async_main
 async def main():
     await async_main()
     
-#   session = AiohttpSession(proxy="http://proxy.server:3128")
-    bot = Bot(token=config.BOT_TOKEN, parse_mode=ParseMode.HTML)
+    session = AiohttpSession(proxy="http://proxy.server:3128")
+    bot = Bot(token=config.BOT_TOKEN, parse_mode=ParseMode.HTML, session=session)
     dp = Dispatcher(storage=MemoryStorage())
     dp.message.middleware(ChatActionMiddleware())
     dp.include_router(router)
