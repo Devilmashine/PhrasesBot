@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
+
 menu = [
     [InlineKeyboardButton(text="📝 Генерировать текст", callback_data="generate_text")],
 #    [InlineKeyboardButton(text="💳 Купить токены", callback_data="buy_tokens"),

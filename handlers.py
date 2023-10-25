@@ -1,9 +1,10 @@
 import os
-from aiogram import Bot, Router, types
+from aiogram import F, Bot, Router, flags
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.types import Message, FSInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.types.callback_query import CallbackQuery
+from sqlalchemy import Engine
 import key_word_generator
 from states import Gen
 import kb
@@ -15,60 +16,72 @@ bot = Bot(token=config.BOT_TOKEN)
 
 @router.message(Command("start"))
 async def start_handler(msg: Message):
+    """Handle the start command."""
     await msg.answer(text.greet.format(name=msg.from_user.full_name), reply_markup=kb.menu)
-    
 
-
-
-
-
-"""
-@router.message(types.ContentType.TEXT(equals=["Меню", "Выйти в меню", "◀️ Выйти в меню"]))
+@router.message(F.text=="Меню")
+@router.message(F.text=="Выйти в меню")
+@router.message(F.text=="◀️ Выйти в меню")
 async def menu(msg: Message):
+    """Handle the menu command."""
     await msg.answer(text.menu, reply_markup=kb.menu)
 
-@router.callback_query(types.ContentType.TEXT(data="generate_text"))
+@router.callback_query(F.data == "generate_text")
 async def input_text_prompt(clbck: CallbackQuery, state: FSMContext):
-    await state.set_state(Gen.text_prompt)
+    """Start the text generation task."""
+    await state.set_state(Gen.text_prompt_input)
     await clbck.message.edit_text(text.gen_text)
-    await clbck.message.answer(text.gen_exit, reply_markup=kb.exit_kb)
+    await clbck.message.answer("Введите тему:")
+    await state.set_data({"input_type": "topic"})
 
-async def generate_text(msg: Message, state: FSMContext):
-    prompt = msg.text
-    await msg.answer(text.gen_wait)
-    await Gen.topic.set()
-    await state.set_state(Gen.topic)
-    await msg.answer("Введите тему:")
+# ...
 
-@router.message(state=Gen.topic)
-async def process_topic(message: types.Message, state: FSMContext):
-    topic = message.text
-    await state.update_data(topic=topic)
-    await Gen.keywords.set()
-    await message.reply("Введите ключевые слова:")
+@router.message(Gen.text_prompt_input)
+@flags.chat_action("typing")
+async def collect_user_input(msg: Message, state: FSMContext) -> None:
+    """Collect the user's input for the text generation task."""
 
-@router.message(state=Gen.keywords)
-async def process_keywords(message: types.Message, state: FSMContext):
-    keywords = message.text
-    await state.update_data(keywords=keywords)
-    await Gen.phrases_num.set()
-    await message.reply("Введите количество фраз:")
+    input_type = (await state.get_data()).get("input_type", None)
 
-@router.message(state=Gen.phrases_num)
-async def process_phrases_num(message: types.Message, state: FSMContext):
-    phrases_num = int(message.text)
-    data = await state.get_data()
-    topic = data.get("topic")
-    keywords = data.get("keywords")
-    try:
-        phrases_file = key_word_generator.main(topic, keywords, phrases_num) 
-        with open(phrases_file, 'rb') as file:
-            await bot.send_document(message.chat.id, file)
-        os.unlink(phrases_file)
-        await state.finish()
-        await message.reply("Готово!")
-    except Exception as e:
-        await message.reply('Ошибка генерации фраз')
+    if input_type == "topic":
+        await state.update_data({"topic": msg.text})
+        await msg.reply("Введите ключевые слова:")
+        await state.update_data({"input_type": "keywords"})
         return
-    
-"""
+
+    if input_type == "keywords":
+        await state.update_data({"keywords": msg.text})
+        await msg.reply("Введите количество фраз:")
+        await state.update_data({"input_type": "phrases_num"})
+        return
+
+    if input_type == "phrases_num":
+        phrases_num: int = int(msg.text)
+
+        # Validate the user's input
+        if not isinstance(phrases_num, int) or phrases_num <= 0:
+            await msg.reply("Количество фраз должно быть положительным целым числом.")
+            return
+
+        try:
+            data = await state.get_data()  # Get the stored data
+            topic = data.get("topic")
+            keywords = data.get("keywords")
+
+            mesg = await msg.answer(text.gen_wait)
+
+            doc_info, phrases_file = await key_word_generator.main(
+                topic,
+                keywords,
+                phrases_num
+            )
+
+            await mesg.delete()
+            await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption=f"Готово! ChatGPT сгенерировал: {doc_info} фраз" )
+
+            os.remove(phrases_file)
+
+        except Exception as e:
+            print(e)
+            await msg.reply('Ошибка генерации фраз')
+            return
