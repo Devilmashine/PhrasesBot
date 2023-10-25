@@ -9,7 +9,7 @@ from aiogram.utils.chat_action import ChatActionMiddleware
 
 import config
 from handlers import router
-from db import async_main
+from db.db import async_main
 
 
 async def main():

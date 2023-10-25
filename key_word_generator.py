@@ -6,7 +6,7 @@ import config
 
 openai.api_key = config.OPENAI_TOKEN
 
-async def chat_chatgpt_stream(prompt) -> list[str]:
+async def chat_chatgpt(prompt) -> list[str]:
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-16k",
         messages=prompt,
@@ -56,12 +56,12 @@ async def main(topic, keywords, phrases_num):
         
     while len(output_summary) < phrases_num:
         if first_request:
-            response = await chat_chatgpt_stream(prompt)
+            response = await chat_chatgpt(prompt)
             first_request = False
         else:
             conversation_history.append({"role": "user", "content": "please continue!"})
             prompt = conversation_history
-            response = await chat_chatgpt_stream(prompt)
+            response = await chat_chatgpt(prompt)
             
         if response:
             conversation_history.append({"role": "assistant", "content": str(response)})
@@ -72,6 +72,7 @@ async def main(topic, keywords, phrases_num):
             prompt = [message["content"] for message in conversation_history]
                 
             print("ChatGPT сгенерировал:", len(output_summary), "фраз")
+            doc_info = len(output_summary)
                 
         num_requests += 1
         if num_requests >= 3:
@@ -79,9 +80,8 @@ async def main(topic, keywords, phrases_num):
             num_requests = 0
     
     output_file.close()
-    return "generated_phrases.txt"
+    return "generated_phrases.txt", doc_info
 
 # Run the main function
 if __name__ == "__main__":
     generated_phrases_file = asyncio.run(main())
-    print(f"Generated phrases saved in {generated_phrases_file}")
