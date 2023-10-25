@@ -79,7 +79,7 @@ async def collect_user_input(msg: Message, state: FSMContext) -> None:
             await mesg.delete()
             await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption=f"Готово! ChatGPT сгенерировал: {doc_info} фраз" )
 
-            os.remove(phrases_file)
+            os.remove("generated_phrases.txt")
 
         except Exception as e:
             print(e)
