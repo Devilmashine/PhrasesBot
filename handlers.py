@@ -70,14 +70,14 @@ async def collect_user_input(msg: Message, state: FSMContext) -> None:
 
             mesg = await msg.answer(text.gen_wait)
 
-            doc_info, phrases_file = await key_word_generator.main(
+            await key_word_generator.main(
                 topic,
                 keywords,
                 phrases_num
             )
 
             await mesg.delete()
-            await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption=f"Готово! ChatGPT сгенерировал: {doc_info} фраз" )
+            await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption=f"Готово!" )
 
             os.remove("generated_phrases.txt")
 
