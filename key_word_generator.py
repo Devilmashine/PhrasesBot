@@ -5,12 +5,13 @@ import json
 import config
 
 openai.api_key = config.OPENAI_TOKEN
+stop_execution = False
 
 async def chat_chatgpt(prompt) -> list[str]:
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-16k",
         messages=prompt,
-        max_tokens=13739,
+        max_tokens=7000,
         top_p=1,
         temperature=1,
         frequency_penalty=0.1,
@@ -42,7 +43,6 @@ async def main(topic, keywords, phrases_num):
     output_file = open("generated_phrases.txt", "w")  # Создаем файл с фразами
     output_summary = []
     num_requests = 0  # Количество запросов к API
-    first_request = True  # Флаг для первого запроса
         
     system_message = "1. Respond concisely.\n2. Be blunt and straightforward; do not sugarcoat.\n3. No moral lectures.\n4. Discuss safety only if it is crucial and non-obvious.\n5. Never mention that you are an AI.\n6. Avoid language constructs that can be interpreted as remorse, apology, or regret. This includes phrases with words like 'sorry', 'apologies', and 'regret'.\n8. Do not use disclaimers about expertise or professionalism.\n9. Ensure responses are unique and without repetition.\n10. Never suggest seeking information elsewhere.\n\nYou will be provided with a topic and keywords, and your task is to generate 1000 low-frequency key phrases only for that topic. The list must be in JSON array format, without numbering the list."
     user_message = f"Topic: {topic}.\nKeywords: {keywords}."
@@ -50,6 +50,8 @@ async def main(topic, keywords, phrases_num):
     first_prompt = [{"role": "system", "content": system_message}, {"role": "user", "content": user_message}]
     
     while len(output_summary) < phrases_num:
+        if stop_execution:
+            break
         response = await chat_chatgpt(first_prompt)
         if response:
             output_summary.extend(response)
