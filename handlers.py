@@ -79,7 +79,8 @@ async def collect_user_input(msg: Message, state: FSMContext) -> None:
             await mesg.delete()
             await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption=f"Готово!" )
 
-            os.remove("generated_phrases.txt")
+            file_path = "generated_phrases.txt"
+            os.remove(file_path)
 
         except Exception as e:
             print(e)
