@@ -26,6 +26,14 @@ async def menu(msg: Message):
     """Handle the menu command."""
     await msg.answer(text.menu, reply_markup=kb.menu)
 
+@router.callback_query(F.data == "stop_generate_text")
+async def stop_gen_text(clbck: CallbackQuery, state: FSMContext):
+    """Stop the text generation task."""
+    key_word_generator.stop_execution = True
+    await clbck.message.delete()
+    await clbck.message.answer(text="Генерация остановлена. Нажми /start, чтобы начать новую генерацию.")
+    await state.clear()
+
 @router.callback_query(F.data == "generate_text")
 async def input_text_prompt(clbck: CallbackQuery, state: FSMContext):
     """Start the text generation task."""
@@ -33,8 +41,6 @@ async def input_text_prompt(clbck: CallbackQuery, state: FSMContext):
     await clbck.message.edit_text(text.gen_text)
     await clbck.message.answer("Введите тему:")
     await state.set_data({"input_type": "topic"})
-
-# ...
 
 @router.message(Gen.text_prompt_input)
 @flags.chat_action("typing")
@@ -68,7 +74,7 @@ async def collect_user_input(msg: Message, state: FSMContext) -> None:
             topic = data.get("topic")
             keywords = data.get("keywords")
 
-            mesg = await msg.answer(text.gen_wait)
+            mesg = await msg.answer(text.gen_wait, reply_markup=kb.stop_menu)
 
             await key_word_generator.main(
                 topic,
@@ -76,13 +82,13 @@ async def collect_user_input(msg: Message, state: FSMContext) -> None:
                 phrases_num
             )
 
-            await mesg.delete()
-            await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption=f"Готово!" )
-
-            file_path = "generated_phrases.txt"
-            os.remove(file_path)
-
         except Exception as e:
             print(e)
             await msg.reply('Ошибка генерации фраз')
             return
+        else:
+            await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption=f"Готово!" )
+
+        file_path = "generated_phrases.txt"
+        os.remove(file_path)
+        
