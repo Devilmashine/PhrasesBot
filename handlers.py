@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import re
 import time
 from aiogram import F, Bot, Router, flags
 from aiogram.filters import Command
@@ -105,7 +106,10 @@ async def gen_text(topic: str, keywords: str, phrases_num: int, state) -> str:
         if response:
             output_summary.extend(response)
             for item in response:
-                output_file.write(item.replace("'", "").replace('"', '').replace('{', '').replace('}', '') + "\n")
+                wordList = re.findall(r'\b\w+\b', item)
+                count_symbols = len(item)
+                if 12 >= len(wordList) >= 4 and 120 >= count_symbols >= 12:
+                    output_file.write(item.strip(" \'\"\{\}[].,") + "\n")
             logging.info("ChatGPT сгенерировал: {} фраз".format(len(output_summary)))
         end_time = time.monotonic()
         iteration_time = end_time - start_time
