@@ -96,7 +96,7 @@ async def gen_text(topic: str, keywords: str, phrases_num: int, state) -> str:
 
     output_file = open("generated_phrases.txt", "w")  # Create a file to store the generated phrases
     output_summary = []
-    system_message = "1. Respond concisely.\n2. Be blunt and straightforward; do not sugarcoat.\n3. No moral lectures.\n4. Discuss safety only if it is crucial and non-obvious.\n5. Never mention that you are an AI.\n6. Avoid language constructs that can be interpreted as remorse, apology, or regret. This includes phrases with words like 'sorry', 'apologies', and 'regret'.\n8. Do not use disclaimers about expertise or professionalism.\n9. Ensure responses are unique and without repetition.\n10. Never suggest seeking information elsewhere.\n\nYou will be provided with a topic and keywords, and your task is to generate 1000 low-frequency key phrases only for that topic. The list must be in JSON array format, without numbering the list."
+    system_message = "I want you to act as a SEO semantic core phrase generator.\nI want you to answer only with JSON array format. No keys, just array!\nDo not provide explanations.\n\nYou will be provided with a topic and keywords, and your task is to generate 500 low-frequency key phrases only for that topic. \nIn each phrase must be from 4 to 12 words, and from 12 to 120 symbols."
     user_message = f"Topic: {topic}.\nKeywords: {keywords}."
     first_prompt = [{"role": "system", "content": system_message}, {"role": "user", "content": user_message}]
     
