@@ -1,15 +1,18 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import os
 import time
 import openai
 import logging
 import json
-import config
+from config import config
 
-openai.api_key = config.OPENAI_TOKEN
+api_keys = os.en
 
-async def main(prompt) -> list[str]:
+async def generate_phrases(prompt, api_key) -> list[str]:
     """Generates a list of phrases from a given prompt using the ChatGPT language model."""
     try:
+        start_time = time.monotonic()
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo-16k",
             messages=prompt,
@@ -17,18 +20,35 @@ async def main(prompt) -> list[str]:
             top_p=1,
             temperature=1,
             frequency_penalty=0.1,
-            presence_penalty=0.1
+            presence_penalty=0.1,
+            api_key=api_key
         )
         final_response = response.choices[0].message["content"]  # type: ignore
 
         response_list = parse_final_response(final_response)
 
         response_list = remove_duplicates(response_list)
-
+        end_time = time.monotonic()
+        iteration_time = end_time - start_time
+        if iteration_time < 20:
+            await asyncio.sleep(iteration_time)  # Пауза между запросами
         return response_list
     except Exception as e:
         logging.error(f"Error occurred: {e}")
         return []
+
+async def main(prompt):
+    """Runs the main function with multiple prompts in parallel using multiple API keys."""
+    results = []
+    with ThreadPoolExecutor() as executor:
+        for api_key in api_keys:
+            results.append(executor.submit(await generate_phrases(api_key)))
+    generated_phrases = []
+    for result in results:
+        generated_phrases.extend(result.result())
+
+    return generated_phrases
+
 
 def parse_final_response(final_response: str) -> list[str]:
     """Parses the final response from the ChatGPT language model into a list of phrases."""
