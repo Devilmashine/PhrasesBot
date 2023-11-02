@@ -13,7 +13,11 @@ stop_menu = [
     [InlineKeyboardButton(text="Остановить генерацию", callback_data="stop_generate_text")]
 ]
 
+#main_admin = ReplyKeyboardMarkup(resize_keyboard=True)
+#main_admin.add('◀️ Выйти в меню').add('Админ-панель')
+
 menu = InlineKeyboardMarkup(inline_keyboard=menu)
 stop_menu = InlineKeyboardMarkup(inline_keyboard=stop_menu)
 exit_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="◀️ Выйти в меню")]], resize_keyboard=True)
 iexit_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="◀️ Выйти в меню", callback_data="menu")]])
+

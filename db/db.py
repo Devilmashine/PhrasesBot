@@ -1,10 +1,10 @@
 from sqlalchemy import BigInteger, Boolean, String
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
-from .. import config
+from config import config
 
 engine = create_async_engine(
-    config.SQLALCHEMY_URL,
+    config.sqlalchemy_url.get_secret_value(),
     echo=True
 )
 
@@ -18,7 +18,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement="auto")
     tg_id = mapped_column(BigInteger)
     openai_token = mapped_column(String)  # Use String type for the openai_token column
     tg_username: Mapped[str] = mapped_column(String)
@@ -70,3 +70,9 @@ async def get_openai_token(tg_id: BigInteger) -> str:
     async with async_session() as session:
         user = await session.get(User, tg_id)
         return user.openai_token
+    
+async def get_is_registered_user(tg_id: BigInteger) -> bool:
+    async with async_session() as session:
+        user = await session.get(User, tg_id)
+        return user is not None
+
