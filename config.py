@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     # для конфиденциальных данных, например, токена бота
     bot_token: SecretStr
     sqlalchemy_url: SecretStr
-
+    openai_tokens: str
     # Начиная со второй версии pydantic, настройки класса настроек задаются
     # через model_config
     # В данном случае будет использоваться файла .env, который будет прочитан

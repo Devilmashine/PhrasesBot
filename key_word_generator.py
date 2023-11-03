@@ -1,13 +1,16 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import os
+from dotenv import load_dotenv
 import time
 import openai
 import logging
 import json
-from config import config
 
-api_keys = os.en
+load_dotenv(dotenv_path=".env")
+OPENAI_TOKENS = os.getenv("OPENAI_TOKENS")
+keys = OPENAI_TOKENS.split(",") # Set of API keys like ["key1", "key2", "key3"] (os.getenv("OPENAI_TOKENS"))
+print(keys)
 
 async def generate_phrases(prompt, api_key) -> list[str]:
     """Generates a list of phrases from a given prompt using the ChatGPT language model."""
@@ -21,17 +24,17 @@ async def generate_phrases(prompt, api_key) -> list[str]:
             temperature=1,
             frequency_penalty=0.1,
             presence_penalty=0.1,
-            api_key=api_key
+            api_key=api_key  # Use the current API key
         )
         final_response = response.choices[0].message["content"]  # type: ignore
 
-        response_list = parse_final_response(final_response)
+        response_list = await asyncio.to_thread(parse_final_response, final_response)
 
         response_list = remove_duplicates(response_list)
         end_time = time.monotonic()
         iteration_time = end_time - start_time
         if iteration_time < 20:
-            await asyncio.sleep(iteration_time)  # Пауза между запросами
+            await asyncio.to_thread(time.sleep, iteration_time)  # Pause between requests
         return response_list
     except Exception as e:
         logging.error(f"Error occurred: {e}")
@@ -39,13 +42,16 @@ async def generate_phrases(prompt, api_key) -> list[str]:
 
 async def main(prompt):
     """Runs the main function with multiple prompts in parallel using multiple API keys."""
-    results = []
+
     with ThreadPoolExecutor() as executor:
-        for api_key in api_keys:
-            results.append(executor.submit(await generate_phrases(api_key)))
+        loop = asyncio.get_event_loop()
+        results = await asyncio.gather(
+            *[loop.run_in_executor(executor, generate_phrases, prompt, api_key) for api_key in keys]
+        )
+
     generated_phrases = []
     for result in results:
-        generated_phrases.extend(result.result())
+        generated_phrases.extend(await result)  # Await the coroutine
 
     return generated_phrases
 
@@ -71,4 +77,4 @@ def remove_duplicates(response_list):
 
 # Run the main function
 if __name__ == "__main__":
-    generated_phrases_file = asyncio.run(main())
+    generated_phrases = asyncio.run(main())

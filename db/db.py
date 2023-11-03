@@ -70,9 +70,3 @@ async def get_openai_token(tg_id: BigInteger) -> str:
     async with async_session() as session:
         user = await session.get(User, tg_id)
         return user.openai_token
-    
-async def get_is_registered_user(tg_id: BigInteger) -> bool:
-    async with async_session() as session:
-        user = await session.get(User, tg_id)
-        return user is not None
-
