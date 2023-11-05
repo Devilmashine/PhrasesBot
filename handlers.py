@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 import re
-import time
+from dotenv import load_dotenv
 from aiogram import F, Bot, Router, flags
 from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile
@@ -17,6 +17,9 @@ import db.db as db
 
 router = Router()
 bot = Bot(token=config.bot_token.get_secret_value())
+load_dotenv(dotenv_path=".env")
+OPENAI_TOKENS = os.getenv("OPENAI_TOKENS")
+keys = OPENAI_TOKENS.split(",")
 
 async def stop_execution(state: FSMContext):
     await state.update_data({"stop_exec_flag": True})
@@ -163,7 +166,7 @@ async def collect_user_input(msg: Message, state: FSMContext) -> None:
         return
     else:
         if not (await state.get_data()).get("stop_exec_flag"):
-            await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption="Готово!" )
+            await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption="Готово!", reply_markup=kb.menu)
             file_path = "generated_phrases.txt"
             if os.path.exists(file_path):
                 os.remove(file_path)
@@ -181,24 +184,32 @@ async def stop_gen_text(clbck: CallbackQuery, state: FSMContext):
 @router.message()
 async def echo(message: Message):
     await message.answer('Я тебя не понимаю...')
-    
-async def gen_text(topic: str, keywords: str, phrases_num: int, state) -> str:
 
-    output_file = open("generated_phrases.txt", "w")  # Create a file to store the generated phrases
+async def gen_text(topic: str, keywords: str, phrases_num: int, state) -> str:
     output_summary = []
     system_message = "I want you to act as a SEO semantic core phrase generator.\nI want you to answer only with JSON array format. No keys, just array!\nDo not provide explanations.\n\nYou will be provided with a topic and keywords, and your task is to generate 500 low-frequency key phrases only for that topic. \nIn each phrase must be from 4 to 12 words, and from 12 to 120 symbols."
     user_message = f"Topic: {topic}.\nKeywords: {keywords}."
-    first_prompt = [{"role": "system", "content": system_message}, {"role": "user", "content": user_message}]
+
+    first_prompt = [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": user_message}
+    ]
+
+    async def generate_phrases(key):
+        while len(output_summary) < phrases_num and not (await state.get_data()).get("stop_exec_flag"):
+            response = await key_word_generator.main(first_prompt, key)
+            if response:
+                output_summary.extend(response)
+                for item in response:
+                    wordList = re.findall(r'\b\w+\b', item)
+                    count_symbols = len(item)
+                    if 12 >= len(wordList) >= 4 and 120 >= count_symbols >= 12:
+                        with open("generated_phrases.txt", "a") as output_file:
+                            output_file.write(item.strip(" \'\"\{\}[].,") + "\n")
+                logging.info("ChatGPT сгенерировал: {} фраз".format(len(output_file)))
+
+    # Create a list of tasks to run concurrently
+    tasks = [generate_phrases(key) for key in keys]
     
-    while len(output_summary) < phrases_num and not (await state.get_data()).get("stop_exec_flag"):
-        response = await key_word_generator.main(first_prompt)
-        if response:
-            output_summary.extend(response)
-            for item in response:
-                wordList = re.findall(r'\b\w+\b', item)
-                count_symbols = len(item)
-                if 12 >= len(wordList) >= 4 and 120 >= count_symbols >= 12:
-                    output_file.write(item.strip(" \'\"\{\}[].,") + "\n")
-            logging.info("ChatGPT сгенерировал: {} фраз".format(len(output_summary)))
-    output_file.close()
-    return
+    await asyncio.gather(*tasks)
+    return None
