@@ -206,7 +206,7 @@ async def gen_text(topic: str, keywords: str, phrases_num: int, state) -> str:
                     if 12 >= len(wordList) >= 4 and 120 >= count_symbols >= 12:
                         with open("generated_phrases.txt", "a") as output_file:
                             output_file.write(item.strip(" \'\"\{\}[].,") + "\n")
-                logging.info("ChatGPT сгенерировал: {} фраз".format(len(output_file)))
+                logging.info("ChatGPT сгенерировал: {} фраз".format(len(output_summary)))
 
     # Create a list of tasks to run concurrently
     tasks = [generate_phrases(key) for key in keys]
