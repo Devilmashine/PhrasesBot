@@ -166,7 +166,7 @@ async def collect_user_input(msg: Message, state: FSMContext) -> None:
         return
     else:
         if not (await state.get_data()).get("stop_exec_flag"):
-            await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption="Готово!", reply_markup=kb.menu)
+            await mesg.answer_document(document=FSInputFile("generated_phrases.txt", filename="generated_phrases.txt"), caption="Готово!")
             file_path = "generated_phrases.txt"
             if os.path.exists(file_path):
                 os.remove(file_path)
