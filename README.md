@@ -15,7 +15,8 @@ python main.py
 `
 
 ## Установка на сервер
-Пример настройки и запуска бота на сервисе https://www.pythonanywhere.com: https://youtu.be/mYlM4RWTHnk?si=5vCSCJp7Kc-ozJ3C
+Пример настройки и запуска бота на сервисе https://www.pythonanywhere.com: 
+https://youtu.be/mYlM4RWTHnk?si=5vCSCJp7Kc-ozJ3C
 
 Требования: Убедитесь, что ваш сервер соответствует следующим требованиям:
 
