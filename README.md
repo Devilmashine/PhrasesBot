@@ -7,8 +7,11 @@ Semantic core generation with ChatGPT
 Для запуска бота на локальной машине:
 `
 python -m venv myenv  # Создание виртуального окружения
+
 source myenv/bin/activate  # Активация виртуального окружения
+
 pip install -r requirements.txt  # Установка зависимостей
+
 python main.py
 `
 
@@ -24,7 +27,9 @@ python main.py
 
 1. Создать виртуальное окружение
 `python -m venv myenv  # Создание виртуального окружения
+
 source myenv/bin/activate  # Активация виртуального окружения
+
 pip install -r requirements.txt  # Установка зависимостей`
 
 2. Изменить файл .env на свои значения
@@ -32,7 +37,9 @@ pip install -r requirements.txt  # Установка зависимостей`
 Пример файла .env:
 `
 BOT_TOKEN = "bot_token"
+
 OPENAI_TOKENS = "token1,token2" #без пробелов через запятую
+
 SQLALCHEMY_URL = "sqlite+aiosqlite:///db.sqlite3"
 `
 
