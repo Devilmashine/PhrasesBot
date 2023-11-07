@@ -1,5 +1,6 @@
 {
     "bitoAI.codeCompletion.enableAutoCompletion": true,
     "bitoAI.codeCompletion.enableCommentToCode": true,
-    "python.analysis.autoImportCompletions": false
+    "python.analysis.autoImportCompletions": false,
+    "editor.inlineSuggest.showToolbar": "onHover"
 }

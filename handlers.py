@@ -205,7 +205,7 @@ async def gen_text(topic: str, keywords: str, phrases_num: int, state) -> str:
                     count_symbols = len(item)
                     if 12 >= len(wordList) >= 4 and 120 >= count_symbols >= 12:
                         with open("generated_phrases.txt", "a") as output_file:
-                            translation_table = str.maketrans("", "", " \'\"{}[].,")
+                            translation_table = str.maketrans("", "", "\"{}[].,")
                             output_file.write(item.translate(translation_table) + "\n")
                 logging.info("ChatGPT сгенерировал: {} фраз".format(len(output_summary)))
 
