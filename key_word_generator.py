@@ -1,6 +1,6 @@
 import asyncio
 import time
-import openai
+from openai import OpenAI
 import logging
 import json
 from collections import OrderedDict
@@ -23,23 +23,23 @@ async def main(prompt: str, api_key: str) -> set[str]:
 
 async def generate_response(prompt: str, api_key: str) -> str:
     """Generates a response using the ChatGPT language model."""
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-16k",
+    client = OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo-1106",
         messages=prompt,
-        max_tokens=7000,
+        max_tokens=3500,
         top_p=1,
         temperature=1,
         frequency_penalty=0.1,
-        presence_penalty=0.1,
-        api_key=api_key
+        presence_penalty=0.1
     )  # Use the current API key
-    final_response = response.choices[0].message["content"]  # type: ignore
+    final_response = response.choices[0].message.content
     return final_response
 
 def parse_final_response(final_response: str) -> list[str]:
     """Parses the final response from the ChatGPT language model into a list of phrases."""
     if not final_response.startswith("[") and final_response.endswith("]"):
-        return final_response.split(", ")
+        return final_response.split(",")
     try:
         parsed_response = json.loads(final_response)
         return parsed_response
