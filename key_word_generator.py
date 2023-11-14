@@ -25,7 +25,7 @@ async def generate_response(prompt: str, api_key: str) -> str:
     """Generates a response using the ChatGPT language model."""
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-3.5-turbo-1106",
         messages=prompt,
         max_tokens=3500,
         top_p=1,
