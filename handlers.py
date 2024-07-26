@@ -187,7 +187,7 @@ async def echo(message: Message):
 
 async def gen_text(topic: str, keywords: str, phrases_num: int, state) -> str:
     output_summary = []
-    system_message = "I want you to act as a SEO semantic core phrase generator.\nI want you to answer only with JSON array format. No keys, just array!\nDo not provide explanations.\n\nYou will be provided with a topic and keywords, and your task is to generate 500 low-frequency key phrases only for that topic. \nIn each phrase must be from 4 to 12 words, and from 12 to 120 symbols."
+    system_message = "I want you to act as an SEO semantic core phrase generator.\nI want you to answer only with JSON array format, without any keys, just the array!\nDo not provide explanations.\n\nYou will be provided with a topic and keywords, and your task is to generate more than 100 low-frequency key phrases specific to that topic. \nEach phrase should contain between 4 to 12 words and be between 12 to 120 characters in length.I want you to act as a SEO semantic core phrase generator.\nI want you to answer only with JSON array format. No keys, just array!\nDo not provide explanations.\n\nYou will be provided with a topic and keywords, and your task is to generate 500 low-frequency key phrases only for that topic. \nIn each phrase must be from 4 to 12 words, and from 12 to 120 symbols."
     user_message = f"Topic: {topic}.\nKeywords: {keywords}."
 
     first_prompt = [

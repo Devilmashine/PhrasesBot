@@ -27,13 +27,14 @@ async def generate_response(prompt: str, api_key: str) -> str:
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=prompt,
-        max_tokens=3500,
+        max_tokens=10000,
         top_p=1,
         temperature=1,
         frequency_penalty=0.1,
         presence_penalty=0.1
     )  # Use the current API key
     final_response = response.choices[0].message.content
+    print(final_response)
     return final_response
 
 def parse_final_response(final_response: str) -> list[str]:
@@ -41,6 +42,7 @@ def parse_final_response(final_response: str) -> list[str]:
     if not final_response.startswith("[") and final_response.endswith("]"):
         return final_response.split(",")
     try:
+        final_response = final_response.replace("\n...", "").replace("```", "").replace("json", "").replace("'", '"')
         parsed_response = json.loads(final_response)
         return parsed_response
     except (json.JSONDecodeError, AttributeError) as e:
